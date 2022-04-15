@@ -16,7 +16,9 @@ PASSWORD = os.getenv('IMAP_PASSWORD')
 MAILBOX = os.getenv('IMAP_MAILBOX')
 
 # Define custom Types
-MboxAppendResult = Tuple[str, List[bytes]]
+OpStatus = str
+OpDetails = List[bytes]
+MboxAppendResult = Tuple[OpStatus, OpDetails]
 PopulateResult = TypedDict('PopulateResult', filename=str, result=MboxAppendResult)
 
 
@@ -47,8 +49,7 @@ def read_emails_fs(path: str) -> Generator:
         return None
 
 
-def populate_emails(emails: Iterator) -> List[PopulateResult]:
-    mbox = auth()
+def populate_emails(mbox: IMAP4, emails: Iterator) -> List[PopulateResult]:
     resp = list(
         dict(filename=filename, result=mbox_append(mbox, file_bytes))
         for filename, file_bytes in emails
@@ -63,5 +64,6 @@ if __name__ == '__main__':
         print('Credentials not set')
         sys.exit(1)
 
-    result = populate_emails(read_emails_fs('samples/'))
+    mbox = auth()
+    result = populate_emails(mbox, read_emails_fs('samples/'))
     pprint(result)
