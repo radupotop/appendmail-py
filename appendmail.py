@@ -3,11 +3,12 @@
 # Upload emails using IMAP append.
 
 import argparse
+import calendar
+import email.utils
 import os
 import sys
 from imaplib import IMAP4, IMAP4_SSL, Time2Internaldate
 from pathlib import Path
-from time import time
 from typing import Generator, Iterator, List, Tuple, TypedDict
 
 # Define ENV VARS
@@ -35,8 +36,24 @@ def auth() -> IMAP4:
     return mbox
 
 
+def email_time_to_timestamp(dt):
+    """Get UNIX timestamp from RFC 5322 email datetime format."""
+    tt = email.utils.parsedate_tz(dt)
+    return calendar.timegm(tt) - tt[9] if tt else None
+
+
+def to_imap_datetime(dt):
+    if dt_parsed := email_time_to_timestamp(dt):
+        return Time2Internaldate(dt_parsed)
+
+
+def parse_date_header(bytes_msg):
+    found = re.findall(r'\nDate:\s?(.*)\n', bytes_msg.decode())
+    return to_imap_datetime(found[0]) if found else None
+
+
 def mbox_append(mbox: IMAP4, b_msg: bytes) -> MboxAppendResult:
-    return mbox.append(MAILBOX, None, Time2Internaldate(time()), b_msg)
+    return mbox.append(MAILBOX, None, parse_date_header(b_msg), b_msg)
 
 
 def read_emails_fs(input_dir: str) -> Generator:
