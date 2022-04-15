@@ -15,8 +15,13 @@ MAILBOX = os.getenv('IMAP_MAILBOX')
 
 
 def auth() -> IMAP4:
-    mbox = IMAP4_SSL(SERVER)
-    mbox.login(USERNAME, PASSWORD)
+    try:
+        mbox = IMAP4_SSL(SERVER)
+        mbox.login(USERNAME, PASSWORD)
+    except ConnectionRefusedError as e:
+        print('Could not connect to server:', e)
+        sys.exit(2)
+
     return mbox
 
 
