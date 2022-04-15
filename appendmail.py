@@ -7,7 +7,7 @@ import sys
 from imaplib import IMAP4, IMAP4_SSL, Time2Internaldate
 from pathlib import Path
 from time import time
-from typing import Dict, Generator, Iterator, List, Tuple, TypedDict
+from typing import Generator, Iterator, List, Tuple, TypedDict
 
 # Define ENV VARS
 SERVER = os.getenv('IMAP_HOSTNAME')
