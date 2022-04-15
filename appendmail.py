@@ -3,14 +3,15 @@
 # Upload emails using IMAP append.
 
 import os
+import sys
 from email.message import EmailMessage
 from imaplib import IMAP4, IMAP4_SSL, Time2Internaldate
 from time import time
 
-SERVER = os.getenv('IMAP_HOSTNAME', 'localhost')
-USERNAME = os.getenv('IMAP_USERNAME', 'testuser')
-PASSWORD = os.getenv('IMAP_PASSWORD', 'pass')
-MAILBOX = os.getenv('IMAP_MAILBOX', 'INBOX')
+SERVER = os.getenv('IMAP_HOSTNAME')
+USERNAME = os.getenv('IMAP_USERNAME')
+PASSWORD = os.getenv('IMAP_PASSWORD')
+MAILBOX = os.getenv('IMAP_MAILBOX')
 
 
 def auth() -> IMAP4:
@@ -39,4 +40,9 @@ def populate_emails():
 
 if __name__ == '__main__':
     from pprint import pprint
+
+    if not (SERVER and USERNAME):
+        print('Credentials not set')
+        sys.exit(1)
+
     pprint(populate_emails())
