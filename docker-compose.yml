@@ -1,0 +1,18 @@
+version: '3.9'
+services:
+    mail:
+        image: dovecot/dovecot:2.3.18
+        ports:
+            - "143:143"
+            - "993:993"
+    test:
+        build:
+            context: ./
+            dockerfile: ./Dockerfile
+        depends_on:
+            - mail
+        environment:
+            IMAP_HOSTNAME: mail
+            USERNAME: testuser
+            PASSWORD: pass
+            MAILBOX: INBOX
