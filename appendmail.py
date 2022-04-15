@@ -20,7 +20,9 @@ MAILBOX = os.getenv('IMAP_MAILBOX')
 OpStatus = str
 OpDetails = List[bytes]
 MboxAppendResult = Tuple[OpStatus, OpDetails]
-PopulateResult = TypedDict('PopulateResult', filename=str, result=MboxAppendResult)
+PopulateResult = TypedDict(
+    'PopulateResult', {'filename': str, 'result': MboxAppendResult}
+)
 
 
 def auth() -> IMAP4:
