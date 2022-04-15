@@ -29,8 +29,7 @@ def auth() -> IMAP4:
         mbox = IMAP4_SSL(SERVER)
         mbox.login(USERNAME, PASSWORD)
     except Exception as e:
-        print('Could not connect to server:', e)
-        sys.exit(1)
+        sys.exit('Could not connect to server: %s' % e)
 
     return mbox
 
@@ -39,11 +38,15 @@ def mbox_append(mbox: IMAP4, b_msg: bytes) -> MboxAppendResult:
     return mbox.append(MAILBOX, None, Time2Internaldate(time()), b_msg)
 
 
-def read_emails_fs(path: str) -> Generator:
+def read_emails_fs(input_dir: str) -> Generator:
     """
     Read emails from path.
     """
-    dir_iter = Path(path).iterdir()
+    resolved_path = Path(input_dir).resolve()
+    if not resolved_path.is_dir():
+        sys.exit('Input directory does not exist: %s' % resolved_path)
+
+    dir_iter = resolved_path.iterdir()
     try:
         while _file := next(dir_iter):
             yield (_file.name, _file.read_bytes())
