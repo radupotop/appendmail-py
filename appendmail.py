@@ -30,7 +30,7 @@ def auth() -> IMAP4:
         mbox.login(USERNAME, PASSWORD)
     except Exception as e:
         print('Could not connect to server:', e)
-        sys.exit(2)
+        sys.exit(1)
 
     return mbox
 
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     if not (SERVER and USERNAME):
         print('Credentials not set')
-        sys.exit(1)
+        sys.exit(2)
 
     mbox = auth()
     emails_from_fs = read_emails_fs(args.input_dir)
