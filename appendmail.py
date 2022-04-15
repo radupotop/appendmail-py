@@ -2,10 +2,12 @@
 #
 # Upload emails using IMAP append.
 
+import argparse
 import os
 import sys
 from imaplib import IMAP4, IMAP4_SSL, Time2Internaldate
 from pathlib import Path
+from pprint import pprint
 from time import time
 from typing import Generator, Iterator, List, Tuple, TypedDict
 
@@ -58,12 +60,15 @@ def populate_emails(mbox: IMAP4, emails: Iterator) -> List[PopulateResult]:
 
 
 if __name__ == '__main__':
-    from pprint import pprint
+    parser = argparse.ArgumentParser()
+    parser.add_argument('input_dir', help='Read email messages from directory')
+    args = parser.parse_args()
 
     if not (SERVER and USERNAME):
         print('Credentials not set')
         sys.exit(1)
 
     mbox = auth()
-    result = populate_emails(mbox, read_emails_fs('samples/'))
+    emails_from_fs = read_emails_fs(args.input_dir)
+    result = populate_emails(mbox, emails_from_fs)
     pprint(result)
