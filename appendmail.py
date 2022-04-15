@@ -4,7 +4,6 @@
 
 import os
 import sys
-from email.message import EmailMessage
 from imaplib import IMAP4, IMAP4_SSL, Time2Internaldate
 from time import time
 
@@ -25,8 +24,8 @@ def auth() -> IMAP4:
     return mbox
 
 
-def mbox_append(mbox: IMAP4, msg: EmailMessage):
-    return mbox.append(MAILBOX, None, Time2Internaldate(time()), msg.as_bytes())
+def mbox_append(mbox: IMAP4, b_msg: bytes):
+    return mbox.append(MAILBOX, None, Time2Internaldate(time()), b_msg)
 
 
 def read_emails():
