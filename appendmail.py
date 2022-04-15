@@ -22,7 +22,7 @@ OpStatus = str
 OpDetails = List[bytes]
 MboxAppendResult = Tuple[OpStatus, OpDetails]
 PopulateResult = TypedDict(
-    'PopulateResult', {'filename': str, 'result': MboxAppendResult}
+    'PopulateResult', {'filename': str, 'date': str, 'result': MboxAppendResult}
 )
 
 DATE_HEADER_REGEX = r'\nDate: ?([a-zA-Z]{3,},? \d{1,2} [a-zA-Z]{3,} \d{4} \d{1,2}.\d{2}.\d{2} ?[+-]?\d{0,4})'
@@ -49,13 +49,13 @@ def to_imap_datetime(dt):
         return Time2Internaldate(dt_parsed)
 
 
-def parse_date_header(bytes_msg):
+def parse_date_header(bytes_msg: bytes):
     found = re.findall(DATE_HEADER_REGEX, bytes_msg.decode())
     return to_imap_datetime(found[0]) if found else None
 
 
-def mbox_append(mbox: IMAP4, b_msg: bytes) -> MboxAppendResult:
-    return mbox.append(MAILBOX, None, parse_date_header(b_msg), b_msg)
+def mbox_append(mbox: IMAP4, imap_date: str, msg_bytes: bytes) -> MboxAppendResult:
+    return mbox.append(MAILBOX, None, imap_date, msg_bytes)
 
 
 def read_emails_fs(input_dir: str) -> Generator:
@@ -69,15 +69,20 @@ def read_emails_fs(input_dir: str) -> Generator:
     dir_iter = resolved_path.iterdir()
     try:
         while _file := next(dir_iter):
-            yield (_file.name, _file.read_bytes())
+            file_bytes = _file.read_bytes()
+            yield (_file.name, parse_date_header(file_bytes), file_bytes)
     except StopIteration:
         return None
 
 
 def populate_emails(mbox: IMAP4, emails: Iterator) -> Iterator[PopulateResult]:
     return (
-        dict(filename=filename, result=mbox_append(mbox, file_bytes))
-        for filename, file_bytes in emails
+        dict(
+            filename=filename,
+            date=parsed_date,
+            result=mbox_append(mbox, parsed_date, file_bytes),
+        )
+        for filename, parsed_date, file_bytes in emails
     )
 
 
