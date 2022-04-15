@@ -7,7 +7,6 @@ import os
 import sys
 from imaplib import IMAP4, IMAP4_SSL, Time2Internaldate
 from pathlib import Path
-from pprint import pprint
 from time import time
 from typing import Generator, Iterator, List, Tuple, TypedDict
 
@@ -54,12 +53,11 @@ def read_emails_fs(input_dir: str) -> Generator:
         return None
 
 
-def populate_emails(mbox: IMAP4, emails: Iterator) -> List[PopulateResult]:
-    resp = list(
+def populate_emails(mbox: IMAP4, emails: Iterator) -> Iterator[PopulateResult]:
+    return (
         dict(filename=filename, result=mbox_append(mbox, file_bytes))
         for filename, file_bytes in emails
     )
-    return resp
 
 
 if __name__ == '__main__':
@@ -74,4 +72,5 @@ if __name__ == '__main__':
     mbox = auth()
     emails_from_fs = read_emails_fs(args.input_dir)
     result = populate_emails(mbox, emails_from_fs)
-    pprint(result)
+    for msg_res in result:
+        print(msg_res)
