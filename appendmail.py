@@ -25,6 +25,8 @@ PopulateResult = TypedDict(
     'PopulateResult', {'filename': str, 'result': MboxAppendResult}
 )
 
+DATE_HEADER_REGEX = r'\nDate: ?([a-zA-Z]{3,},? \d{1,2} [a-zA-Z]{3,} \d{4} \d{1,2}.\d{2}.\d{2} ?[+-]?\d{0,4})'
+
 
 def auth() -> IMAP4:
     try:
@@ -48,7 +50,7 @@ def to_imap_datetime(dt):
 
 
 def parse_date_header(bytes_msg):
-    found = re.findall(r'\nDate:\s?(.*)\n', bytes_msg.decode())
+    found = re.findall(DATE_HEADER_REGEX, bytes_msg.decode())
     return to_imap_datetime(found[0]) if found else None
 
 
