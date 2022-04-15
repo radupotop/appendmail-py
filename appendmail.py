@@ -6,6 +6,7 @@ import argparse
 import calendar
 import email.utils
 import os
+import re
 import sys
 from imaplib import IMAP4, IMAP4_SSL, Time2Internaldate
 from pathlib import Path
