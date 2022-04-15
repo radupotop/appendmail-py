@@ -28,7 +28,7 @@ def auth() -> IMAP4:
     try:
         mbox = IMAP4_SSL(SERVER)
         mbox.login(USERNAME, PASSWORD)
-    except ConnectionRefusedError as e:
+    except Exception as e:
         print('Could not connect to server:', e)
         sys.exit(2)
 
