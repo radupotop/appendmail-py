@@ -13,6 +13,6 @@ services:
             - mail
         environment:
             IMAP_HOSTNAME: mail
-            USERNAME: testuser
-            PASSWORD: pass
-            MAILBOX: INBOX
+            IMAP_USERNAME: testuser
+            IMAP_PASSWORD: pass
+            IMAP_MAILBOX: INBOX

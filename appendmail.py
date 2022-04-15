@@ -8,9 +8,9 @@ from imaplib import IMAP4, IMAP4_SSL, Time2Internaldate
 from time import time
 
 SERVER = os.getenv('IMAP_HOSTNAME', 'localhost')
-USERNAME = os.getenv('USERNAME', 'testuser')
-PASSWORD = os.getenv('PASSWORD', 'pass')
-MAILBOX = os.getenv('MAILBOX', 'INBOX')
+USERNAME = os.getenv('IMAP_USERNAME', 'testuser')
+PASSWORD = os.getenv('IMAP_PASSWORD', 'pass')
+MAILBOX = os.getenv('IMAP_MAILBOX', 'INBOX')
 
 
 def auth() -> IMAP4:
@@ -27,7 +27,7 @@ def read_emails():
     """
     Read emails from path.
     """
-    pass
+    return []
 
 
 def populate_emails():
