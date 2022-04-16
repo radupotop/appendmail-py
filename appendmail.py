@@ -26,7 +26,7 @@ PopulateResult = TypedDict(
     'PopulateResult', {'filename': str, 'date': str, 'result': MboxAppendResult}
 )
 
-DATE_HEADER_REGEX = r'\nDate: ?([a-zA-Z]*,? \d{1,2} [a-zA-Z]{3,} \d{4} \d{1,2}:\d{2}:\d{2} ?[+-]?\d{0,4})'
+DATE_HEADER_REGEX = r'\nDate: ?([a-zA-Z]*,? ?\d{1,2} [a-zA-Z]{3,} \d{4} \d{1,2}:\d{2}:\d{2} ?[+-]?\d{0,4})'
 
 
 def auth() -> IMAP4:
