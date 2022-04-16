@@ -51,7 +51,8 @@ def to_imap_datetime(dt):
 
 
 def parse_date_header(bytes_msg: bytes):
-    found = re.findall(DATE_HEADER_REGEX, bytes_msg.decode())
+    # Decoding errors are safe to ignore since we only want the Date header.
+    found = re.findall(DATE_HEADER_REGEX, bytes_msg.decode('utf-8', 'ignore'))
     return to_imap_datetime(found[0]) if found else None
 
 
