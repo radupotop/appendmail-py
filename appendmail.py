@@ -9,6 +9,7 @@ import logging
 import os
 import re
 import sys
+from datetime import datetime
 from imaplib import IMAP4, IMAP4_SSL, Time2Internaldate
 from pathlib import Path
 from typing import Generator, Iterator, List, Tuple, TypedDict
@@ -69,15 +70,18 @@ def mbox_append(mbox: IMAP4, imap_date: str, msg_bytes: bytes) -> MboxAppendResu
     return mbox.append(MAILBOX, None, imap_date, msg_bytes)
 
 
-def read_emails_fs(input_dir: str) -> Generator:
-    """
-    Read emails from path.
-    """
+def check_path(input_dir: str) -> Path:
     resolved_path = Path(input_dir).resolve()
     if not resolved_path.is_dir():
         logging.error('Input directory does not exist: %s', resolved_path)
         sys.exit(1)
+    return resolved_path
 
+
+def read_emails_fs(resolved_path: Path) -> Generator:
+    """
+    Read emails from path.
+    """
     logging.info('Reading emails from path: %s', resolved_path)
     dir_iter = resolved_path.iterdir()
     try:
@@ -114,8 +118,9 @@ if __name__ == '__main__':
         sys.exit(2)
 
     mbox = auth()
-    emails_from_fs = read_emails_fs(args.input_dir)
+    emails_from_fs = read_emails_fs(check_path(args.input_dir))
     result = populate_emails(mbox, emails_from_fs)
+    logging.info('START %s', datetime.now())
     for msg_res in result:
         logging.info(msg_res)
-    logging.info('DONE')
+    logging.info('DONE %s', datetime.now())
