@@ -62,7 +62,10 @@ def to_imap_datetime(dt):
 
 
 def parse_headers(bytes_msg: bytes):
-    # Decoding errors are safe to ignore since we only want the Date header.
+    """
+    Parse headers from email.
+    UTF-8 decoding errors are safe to ignore since we only want a few headers.
+    """
     decoded_msg = bytes_msg.decode('utf-8', 'ignore')
     found_date = re.findall(DATE_HEADER_REGEX, decoded_msg)
     found_labels = re.findall(LABELS_REGEX, decoded_msg)
@@ -86,7 +89,7 @@ def check_path(input_dir: str) -> Path:
 
 def read_emails_fs(resolved_path: Path) -> Generator:
     """
-    Read emails from path.
+    Read emails from local filesystem path.
     """
     logging.info('Reading emails from path: %s', resolved_path)
     dir_iter = resolved_path.iterdir()
