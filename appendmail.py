@@ -29,6 +29,7 @@ PopulateResult = TypedDict(
 )
 
 DATE_HEADER_REGEX = r'\nDate: ?([a-zA-Z]*,? ?\d{1,2} [a-zA-Z]{3,} \d{4} \d{1,2}:\d{2}:\d{2} ?[+-]?\d{0,4})'
+LABELS_REGEX = r'X-GMAIL-LABELS: "\\?(\\[\w]+)"'
 
 LOG_CONFIG = dict(
     format='%(message)s',
@@ -60,14 +61,19 @@ def to_imap_datetime(dt):
         return Time2Internaldate(dt_parsed)
 
 
-def parse_date_header(bytes_msg: bytes):
+def parse_headers(bytes_msg: bytes):
     # Decoding errors are safe to ignore since we only want the Date header.
-    found = re.findall(DATE_HEADER_REGEX, bytes_msg.decode('utf-8', 'ignore'))
-    return to_imap_datetime(found[0]) if found else None
+    decoded_msg = bytes_msg.decode('utf-8', 'ignore')
+    found_date = re.findall(DATE_HEADER_REGEX, decoded_msg)
+    found_labels = re.findall(LABELS_REGEX, decoded_msg)
+    return (
+        to_imap_datetime(found_date[0]) if found_date else None,
+        found_labels[0] if found_labels else None,
+    )
 
 
-def mbox_append(mbox: IMAP4, imap_date: str, msg_bytes: bytes) -> MboxAppendResult:
-    return mbox.append(MAILBOX, None, imap_date, msg_bytes)
+def mbox_append(mbox: IMAP4, msg_bytes: bytes, imap_date: str, imap_labels: str) -> MboxAppendResult:
+    return mbox.append(MAILBOX, imap_labels, imap_date, msg_bytes)
 
 
 def check_path(input_dir: str) -> Path:
@@ -87,7 +93,7 @@ def read_emails_fs(resolved_path: Path) -> Generator:
     try:
         while _file := next(dir_iter):
             file_bytes = _file.read_bytes()
-            yield (_file.name, parse_date_header(file_bytes), file_bytes)
+            yield (_file.name, file_bytes, *parse_headers(file_bytes))
     except StopIteration:
         return None
 
@@ -97,9 +103,9 @@ def populate_emails(mbox: IMAP4, emails: Iterator) -> Iterator[PopulateResult]:
         dict(
             filename=filename,
             date=parsed_date,
-            result=mbox_append(mbox, parsed_date, file_bytes),
+            result=mbox_append(mbox, file_bytes, parsed_date, labels),
         )
-        for filename, parsed_date, file_bytes in emails
+        for filename, file_bytes, parsed_date, labels in emails
     )
 
 
