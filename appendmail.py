@@ -23,13 +23,13 @@ MAILBOX = os.getenv('IMAP_MAILBOX')
 # Define custom Types
 OpStatus = str
 OpDetails = List[bytes]
-MboxAppendResult = Tuple[OpStatus, OpDetails]
+ImapOpResponse = Tuple[OpStatus, OpDetails]
 PopulateResult = TypedDict(
-    'PopulateResult', {'filename': str, 'date': str, 'result': MboxAppendResult}
+    'PopulateResult', {'filename': str, 'date': str, 'result': ImapOpResponse}
 )
 
 DATE_HEADER_REGEX = r'\nDate: ?([a-zA-Z]*,? ?\d{1,2} [a-zA-Z]{3,} \d{4} \d{1,2}:\d{2}:\d{2} ?[+-]?\d{0,4})'
-LABELS_REGEX = r'X-GMAIL-LABELS: "\\?(\\[\w]+)"'
+LABELS_REGEX = r'X-GMAIL-LABELS: "\\\\?([\w]+)"'
 
 LOG_CONFIG = dict(
     format='%(message)s',
@@ -39,14 +39,15 @@ LOG_CONFIG = dict(
 
 
 def auth() -> IMAP4:
+    status = [None, None]
     try:
         mbox = IMAP4_SSL(SERVER)
-        mbox.login(USERNAME, PASSWORD)
+        status = mbox.login(USERNAME, PASSWORD)
     except Exception as e:
         logging.error('Could not connect to server: %s', e)
         sys.exit(1)
 
-    logging.info('Logged-in to server: %s', SERVER)
+    logging.info('Logged-in to server: %s, %s', SERVER, status)
     return mbox
 
 
@@ -61,7 +62,7 @@ def to_imap_datetime(dt):
         return Time2Internaldate(dt_parsed)
 
 
-def parse_headers(bytes_msg: bytes):
+def parse_headers(bytes_msg: bytes) -> Tuple[str, str]:
     """
     Parse headers from email.
     UTF-8 decoding errors are safe to ignore since we only want a few headers.
@@ -77,7 +78,7 @@ def parse_headers(bytes_msg: bytes):
 
 def mbox_append(
     mbox: IMAP4, msg_bytes: bytes, imap_date: str, imap_labels: str
-) -> MboxAppendResult:
+) -> ImapOpResponse:
     return mbox.append(MAILBOX, imap_labels, imap_date, msg_bytes)
 
 
