@@ -44,6 +44,7 @@ def auth() -> IMAP4:
         logging.error('Could not connect to server: %s', e)
         sys.exit(1)
 
+    logging.info('Logged-in to server: %s', SERVER)
     return mbox
 
 
@@ -77,6 +78,7 @@ def read_emails_fs(input_dir: str) -> Generator:
         logging.error('Input directory does not exist: %s', resolved_path)
         sys.exit(1)
 
+    logging.info('Reading emails from path: %s', resolved_path)
     dir_iter = resolved_path.iterdir()
     try:
         while _file := next(dir_iter):
