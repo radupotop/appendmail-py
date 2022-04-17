@@ -5,6 +5,7 @@
 import argparse
 import calendar
 import email.utils
+import logging
 import os
 import re
 import sys
@@ -28,13 +29,20 @@ PopulateResult = TypedDict(
 
 DATE_HEADER_REGEX = r'\nDate: ?([a-zA-Z]*,? ?\d{1,2} [a-zA-Z]{3,} \d{4} \d{1,2}:\d{2}:\d{2} ?[+-]?\d{0,4})'
 
+LOG_CONFIG = dict(
+    format='%(message)s',
+    encoding='utf-8',
+    level=logging.INFO,
+)
+
 
 def auth() -> IMAP4:
     try:
         mbox = IMAP4_SSL(SERVER)
         mbox.login(USERNAME, PASSWORD)
     except Exception as e:
-        sys.exit('Could not connect to server: %s' % e)
+        logging.error('Could not connect to server: %s', e)
+        sys.exit(1)
 
     return mbox
 
@@ -66,7 +74,8 @@ def read_emails_fs(input_dir: str) -> Generator:
     """
     resolved_path = Path(input_dir).resolve()
     if not resolved_path.is_dir():
-        sys.exit('Input directory does not exist: %s' % resolved_path)
+        logging.error('Input directory does not exist: %s', resolved_path)
+        sys.exit(1)
 
     dir_iter = resolved_path.iterdir()
     try:
@@ -91,14 +100,19 @@ def populate_emails(mbox: IMAP4, emails: Iterator) -> Iterator[PopulateResult]:
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('input_dir', help='Read email messages from directory')
+    parser.add_argument('--log', help='Log file')
     args = parser.parse_args()
 
+    if args.log and Path(args.log).resolve().parent.exists():
+        LOG_CONFIG['filename'] = str(args.log)
+    logging.basicConfig(**LOG_CONFIG)
+
     if not (SERVER and USERNAME):
-        print('Credentials not set')
+        logging.error('Credentials not set')
         sys.exit(2)
 
     mbox = auth()
     emails_from_fs = read_emails_fs(args.input_dir)
     result = populate_emails(mbox, emails_from_fs)
     for msg_res in result:
-        print(msg_res)
+        logging.info(msg_res)
