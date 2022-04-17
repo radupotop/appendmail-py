@@ -75,7 +75,9 @@ def parse_headers(bytes_msg: bytes):
     )
 
 
-def mbox_append(mbox: IMAP4, msg_bytes: bytes, imap_date: str, imap_labels: str) -> MboxAppendResult:
+def mbox_append(
+    mbox: IMAP4, msg_bytes: bytes, imap_date: str, imap_labels: str
+) -> MboxAppendResult:
     return mbox.append(MAILBOX, imap_labels, imap_date, msg_bytes)
 
 
