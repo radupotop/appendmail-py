@@ -118,3 +118,4 @@ if __name__ == '__main__':
     result = populate_emails(mbox, emails_from_fs)
     for msg_res in result:
         logging.info(msg_res)
+    logging.info('DONE')
