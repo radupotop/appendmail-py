@@ -15,18 +15,20 @@ from pathlib import Path
 from typing import Generator, Iterator, List, Tuple, TypedDict
 
 # Define ENV VARS
-SERVER = os.getenv('IMAP_HOSTNAME')
-USERNAME = os.getenv('IMAP_USERNAME')
-PASSWORD = os.getenv('IMAP_PASSWORD')
-MAILBOX = os.getenv('IMAP_MAILBOX')
+SERVER = os.environ['IMAP_HOSTNAME']
+USERNAME = os.environ['IMAP_USERNAME']
+PASSWORD = os.environ['IMAP_PASSWORD']
+MAILBOX = os.environ['IMAP_MAILBOX']
 
 # Define custom Types
 OpStatus = str
 OpDetails = List[bytes]
 ImapOpResponse = Tuple[OpStatus, OpDetails]
 PopulateResult = TypedDict(
-    'PopulateResult', {'filename': str, 'date': str, 'result': ImapOpResponse}
+    'PopulateResult', {'filename': str, 'date': str | None, 'result': ImapOpResponse}
 )
+EmailsFromFS = Tuple[str, bytes, str | None, str | None]
+EmailsFromFSGenerator = Generator[EmailsFromFS, None, None]
 
 DATE_HEADER_REGEX = r'\nDate: ?([a-zA-Z]*,? ?\d{1,2} [a-zA-Z]{3,} \d{4} \d{1,2}:\d{2}:\d{2} ?[+-]?\d{0,4})'
 LABELS_REGEX = r'X-GMAIL-LABELS: "\\\\?([\w]+)"'
@@ -51,18 +53,22 @@ def auth() -> IMAP4:
     return mbox
 
 
-def email_time_to_timestamp(dt):
+def email_time_to_timestamp(dt: str) -> int:
     """Get UNIX timestamp from RFC 5322 email datetime format."""
     tt = email.utils.parsedate_tz(dt)
     return calendar.timegm(tt) - tt[9] if tt else None
 
 
-def to_imap_datetime(dt):
+def to_imap_datetime(dt: str) -> str:
+    """
+    Convert date_time to IMAP4 INTERNALDATE representation.
+    Return string in form: '"DD-Mmm-YYYY HH:MM:SS +HHMM"'
+    """
     if dt_parsed := email_time_to_timestamp(dt):
         return Time2Internaldate(dt_parsed)
 
 
-def parse_headers(bytes_msg: bytes) -> Tuple[str, str]:
+def parse_headers(bytes_msg: bytes) -> Tuple[str | None, str | None]:
     """
     Parse headers from email.
     UTF-8 decoding errors are safe to ignore since we only want a few headers.
@@ -90,7 +96,7 @@ def check_path(input_dir: str) -> Path:
     return resolved_path
 
 
-def read_emails_fs(resolved_path: Path) -> Generator:
+def read_emails_fs(resolved_path: Path) -> EmailsFromFSGenerator:
     """
     Read emails from local filesystem path.
     """
@@ -104,7 +110,10 @@ def read_emails_fs(resolved_path: Path) -> Generator:
         return None
 
 
-def populate_emails(mbox: IMAP4, emails: Iterator) -> Iterator[PopulateResult]:
+def populate_emails(
+    mbox: IMAP4,
+    emails: EmailsFromFSGenerator,
+) -> Iterator[PopulateResult]:
     return (
         dict(
             filename=filename,
