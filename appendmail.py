@@ -130,8 +130,10 @@ if __name__ == '__main__':
     parser.add_argument('--log', help='Log file')
     args = parser.parse_args()
 
-    if args.log and Path(args.log).resolve().parent.exists():
-        LOG_CONFIG['filename'] = str(args.log)
+    if args.log:
+        logfile = Path(args.log).resolve()
+        logfile.touch()
+        LOG_CONFIG['filename'] = str(logfile)
     logging.basicConfig(**LOG_CONFIG)
 
     if not (SERVER and USERNAME):
